@@ -20,8 +20,9 @@ import 'package:provider/provider.dart';
 import '../../../core/app_theme.dart';
 import '../../dashboard/view_models/pact_dashboard_view_model.dart';
 import 'triple_warning_dialog.dart';
+import '../../../../core/utils/ad_helper.dart';
 
-const platformKiosk = MethodChannel('com.example.focus_pact/kiosk');
+const platformKiosk = MethodChannel('com.barolabs.pomofarm/kiosk');
 
 class ActiveTimerView extends StatefulWidget {
   final int targetMinutes;
@@ -38,6 +39,20 @@ class _ActiveTimerViewState extends State<ActiveTimerView> with WidgetsBindingOb
   bool _isSetupMode = true;
   Timer? _timer;
   bool _isShowingDialog = false;
+  bool _hasStoppedKiosk = false;
+  bool _hasSuccessfullyPinned = false;
+
+  Future<void> _safeStopKiosk() async {
+    if (!kIsWeb && !_hasStoppedKiosk) {
+      _hasStoppedKiosk = true;
+      try {
+        await platformKiosk.invokeMethod('stopKioskMode');
+      } catch (e) {
+        debugPrint('Failed to stop kiosk mode: $e');
+      }
+    }
+  }
+
   DateTime? _pausedTime;
   bool _isCompleted = false;
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
@@ -74,7 +89,7 @@ class _ActiveTimerViewState extends State<ActiveTimerView> with WidgetsBindingOb
       importance: Importance.max,
       priority: Priority.high,
       playSound: true,
-      fullScreenIntent: true,
+      fullScreenIntent: false,
       visibility: NotificationVisibility.public,
       audioAttributesUsage: AudioAttributesUsage.alarm,
       additionalFlags: additionalFlags, // FLAG_INSISTENT
@@ -98,6 +113,30 @@ class _ActiveTimerViewState extends State<ActiveTimerView> with WidgetsBindingOb
     await _flutterLocalNotificationsPlugin.cancel(0);
   }
 
+  DateTime? _lastPinRequestTime;
+
+  Future<void> _ensureKioskMode() async {
+    if (!mounted || _isCompleted || _isSetupMode) return;
+    
+    // 이전에 요청한 지 5초 이내라면 안드로이드 권한 팝업이 떠있을 수 있으므로 무시 (깜박임 방지)
+    if (_lastPinRequestTime != null && DateTime.now().difference(_lastPinRequestTime!).inSeconds < 5) {
+      return;
+    }
+    
+    try {
+      bool isPinned = await platformKiosk.invokeMethod('isKioskModeActive') ?? false;
+      if (!isPinned && mounted) {
+        _lastPinRequestTime = DateTime.now();
+        await platformKiosk.invokeMethod('startKioskMode');
+      } else if (isPinned) {
+        _lastPinRequestTime = null; // 이미 고정되었으면 쿨다운 리셋
+        _hasSuccessfullyPinned = true;
+      }
+    } catch (e) {
+      debugPrint('Failed to ensure kiosk mode: $e');
+    }
+  }
+
   void _startTimerAndKiosk() {
     setState(() {
       _isSetupMode = false;
@@ -106,17 +145,34 @@ class _ActiveTimerViewState extends State<ActiveTimerView> with WidgetsBindingOb
     _startTimer();
     _scheduleCompletionNotification();
 
-    // 타이머 진입 시 하드코어 화면 고정(Kiosk Mode) 무조건 발동
-    WidgetsBinding.instance!.addPostFrameCallback((_) async {
-      if (!mounted) return;
-      if (!kIsWeb) {
+    if (!kIsWeb) {
+      Future.microtask(() async {
+        if (!mounted) return;
+        
+        bool isLocked = await platformKiosk.invokeMethod('isDeviceLocked') ?? false;
+        if (isLocked) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('📱 화면이 잠겨있습니다. 잠금을 해제하시면 앱 고정이 자동 적용됩니다.')),
+          );
+        }
+        
+        // 이전 락태스크 해제가 덜 끝났을 수 있으므로 대기 (최대 1초)
+        bool isPinned = await platformKiosk.invokeMethod('isKioskModeActive') ?? false;
+        int retries = 0;
+        while (isPinned && retries < 10) {
+          await Future.delayed(const Duration(milliseconds: 100));
+          if (!mounted) return;
+          isPinned = await platformKiosk.invokeMethod('isKioskModeActive') ?? false;
+          retries++;
+        }
+        
         try {
           await platformKiosk.invokeMethod('startKioskMode');
         } catch (e) {
           debugPrint('Failed to start kiosk mode: $e');
         }
-      }
-    });
+      });
+    }
   }
 
   void _startTimer() {
@@ -125,6 +181,17 @@ class _ActiveTimerViewState extends State<ActiveTimerView> with WidgetsBindingOb
         setState(() {
           _remainingSeconds--;
         });
+        // 3초마다 앱 고정 상태를 체크
+        if (_remainingSeconds % 3 == 0 && !kIsWeb) {
+          platformKiosk.invokeMethod('isKioskModeActive').then((isActive) {
+            if (isActive == true) {
+              _hasSuccessfullyPinned = true;
+            } else if (_hasSuccessfullyPinned) {
+              // 한 번이라도 고정을 허용했는데 나중에 풀렸다면 (치팅 시도 등) 다시 잠금 시도!
+              _ensureKioskMode();
+            }
+          }).catchError((_) {});
+        }
       } else {
         _timer?.cancel();
         _onComplete();
@@ -147,6 +214,7 @@ class _ActiveTimerViewState extends State<ActiveTimerView> with WidgetsBindingOb
       } catch (e) {
         debugPrint('kiosk check failed');
       }
+      await _safeStopKiosk();
     } else {
       isPinned = true;
     }
@@ -194,15 +262,31 @@ class _ActiveTimerViewState extends State<ActiveTimerView> with WidgetsBindingOb
 
     vm.completeFocusSession(_targetMinutes, isKioskActive: isPinned);
     if (mounted) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(isPinned ? '🎉 토마토 수확 성공! 💦 물이 추가되었습니다.' : '시간은 채웠지만 화면 잠금 거부로 보상 획득 실패 😢')),
-      );
+      final snackMessage = isPinned ? '🎉 토마토 수확 성공! 💦 물이 추가되었습니다.' : '시간은 채웠지만 화면 잠금 거부로 보상 획득 실패 😢';
+      
+      if (!vm.isPremium) {
+        AdHelper.loadAndShowInterstitialAd(
+          onAdClosed: () {
+            if (mounted) {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(snackMessage)),
+              );
+            }
+          },
+        );
+      } else {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(snackMessage)),
+        );
+      }
     }
   }
 
   void _failSession() async {
     _timer?.cancel();
+    await _safeStopKiosk();
     final vm = context.read<PactDashboardViewModel>();
     
     String consequenceMessage = '⚠️ 몰입 실패. 토마토가 상해버렸어요 🍅💦';
@@ -337,13 +421,7 @@ class _ActiveTimerViewState extends State<ActiveTimerView> with WidgetsBindingOb
     Vibration.cancel();
     Wakelock.disable();
     WidgetsBinding.instance!.removeObserver(this);
-    if (!kIsWeb) {
-      try {
-        platformKiosk.invokeMethod('stopKioskMode');
-      } catch (e) {
-        debugPrint('Failed to stop kiosk mode: $e');
-      }
-    }
+    _safeStopKiosk();
     // 대시보드로 돌아갈 때 세로 모드로 강제 복구
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
@@ -432,15 +510,58 @@ class _ActiveTimerViewState extends State<ActiveTimerView> with WidgetsBindingOb
                 ),
               );
 
+              final percentage = _isSetupMode ? (_targetMinutes / 120.0) : (_remainingSeconds / (_targetMinutes * 60));
+              final equippedAccessory = context.watch<PactDashboardViewModel>().tomatoFarm.equippedAccessory;
+
               final timerWidget = GestureDetector(
                 onPanUpdate: _handlePanUpdate,
                 onPanDown: _handlePanDown,
-                child: CustomPaint(
-                  size: const Size(300, 300),
-                  painter: TomatoPiePainter(
-                    percentage: _isSetupMode ? (_targetMinutes / 120.0) : (_remainingSeconds / (_targetMinutes * 60)),
-                    isSetupMode: _isSetupMode,
-                    equippedAccessory: context.watch<PactDashboardViewModel>().tomatoFarm.equippedAccessory,
+                child: SizedBox(
+                  width: 300,
+                  height: 300,
+                  child: Stack(
+                    children: [
+                      CustomPaint(
+                        size: const Size(300, 300),
+                        painter: TomatoPiePainter(
+                          percentage: percentage,
+                          isSetupMode: _isSetupMode,
+                          equippedAccessory: equippedAccessory,
+                        ),
+                      ),
+                      if (equippedAccessory != null)
+                        ClipPath(
+                          clipper: PieClipper(percentage),
+                          child: Stack(
+                            children: [
+                              Builder(builder: (context) {
+                                final acc = AccessoryStoreWidget.accessories.firstWhere(
+                                  (a) => a['id'] == equippedAccessory,
+                                  orElse: () => {'imagePath': '', 'width': 0.0, 'height': 0.0, 'offsetX': 0.0, 'offsetY': 0.0}
+                                );
+                                if (acc['imagePath'] == '') return const SizedBox();
+                                
+                                final width = (acc['width'] as num?)?.toDouble() ?? 300.0;
+                                final height = (acc['height'] as num?)?.toDouble() ?? 300.0;
+                                final offsetX = (acc['offsetX'] as num?)?.toDouble() ?? 0.0;
+                                final offsetY = (acc['offsetY'] as num?)?.toDouble() ?? 0.0;
+
+                                return Positioned(
+                                  left: 150 - (width / 2) + offsetX,
+                                  top: 150 - (height / 2) + offsetY,
+                                  child: Image.asset(
+                                    acc['imagePath'] as String,
+                                    width: width,
+                                    height: height,
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) => const SizedBox(),
+                                  ),
+                                );
+                              }),
+                            ],
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               );
@@ -647,64 +768,7 @@ class TomatoPiePainter extends CustomPainter {
         ..strokeCap = StrokeCap.round;
       canvas.drawPath(mouthPath, mouthStroke);
 
-      // 3. 액세서리 렌더링 (장착된 경우)
-      if (equippedAccessory != null) {
-        if (equippedAccessory == 'headband') {
-          final headbandCenterY = rect.center.dy - 65;
-          final headbandRect = RRect.fromRectAndRadius(
-            Rect.fromCenter(center: Offset(rect.center.dx, headbandCenterY), width: 180, height: 40),
-            const Radius.circular(6),
-          );
-          
-          // Draw headband background (white with red border)
-          canvas.drawRRect(headbandRect, Paint()..color = Colors.white);
-          canvas.drawRRect(headbandRect, Paint()..color = Colors.red..style = PaintingStyle.stroke..strokeWidth = 3);
-          
-          // Draw "🔥 열공 🔥" text
-          const textSpan = TextSpan(
-            text: '🔥 열공 🔥',
-            style: TextStyle(color: Colors.red, fontSize: 24, fontWeight: FontWeight.bold),
-          );
-          final textPainter = TextPainter(
-            text: textSpan,
-            textDirection: TextDirection.ltr,
-          );
-          textPainter.layout();
-          textPainter.paint(
-            canvas,
-            Offset(rect.center.dx - (textPainter.width / 2), headbandCenterY - (textPainter.height / 2)),
-          );
-        } else {
-          String emoji = '';
-          double scale = 1.0;
-          double offsetY = 0.0;
-          double offsetX = 0.0;
-          
-          final accessory = AccessoryStoreWidget.accessories.firstWhere((acc) => acc['id'] == equippedAccessory, orElse: () => {});
-          if (accessory.isNotEmpty) {
-            emoji = accessory['emoji'] as String;
-            scale = (accessory['scale'] as num).toDouble();
-            offsetY = (accessory['offsetY'] as num).toDouble();
-            offsetX = (accessory['offsetX'] as num?)?.toDouble() ?? 0.0;
-          }
-          
-          final accSpan = TextSpan(
-            text: emoji,
-            style: TextStyle(fontSize: 120 * scale),
-          );
-          final accPainter = TextPainter(
-            text: accSpan,
-            textDirection: TextDirection.ltr,
-          );
-          accPainter.layout();
-          
-          final accOffset = Offset(
-            rect.center.dx - (accPainter.width / 2) + offsetX,
-            rect.center.dy - (accPainter.height / 2) + offsetY,
-          );
-          accPainter.paint(canvas, accOffset);
-        }
-      }
+
 
       canvas.restore();
     }
@@ -731,4 +795,27 @@ class TomatoPiePainter extends CustomPainter {
            oldDelegate.isSetupMode != isSetupMode ||
            oldDelegate.equippedAccessory != equippedAccessory;
   }
+}
+
+class PieClipper extends CustomClipper<Path> {
+  final double percentage;
+  PieClipper(this.percentage);
+  
+  @override
+  Path getClip(Size size) {
+    final Rect rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    Path piePath = Path();
+    if (percentage >= 0.999) {
+      piePath.addOval(rect);
+    } else if (percentage > 0.0) {
+      double startAngle = -math.pi / 2;
+      double sweepAngle = 2 * math.pi * percentage;
+      piePath.moveTo(rect.center.dx, rect.center.dy);
+      piePath.arcTo(rect, startAngle, sweepAngle, false);
+      piePath.close();
+    }
+    return piePath;
+  }
+  @override
+  bool shouldReclip(PieClipper oldClipper) => oldClipper.percentage != percentage;
 }

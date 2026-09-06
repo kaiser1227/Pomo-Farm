@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../app_theme.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class StreakBadge extends StatelessWidget {
   final int streakDays;
@@ -28,7 +29,7 @@ class StreakBadge extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            isFire ? '$streakDays일 연속 수확' : '새로운 씨앗을 심으세요',
+            isFire ? AppLocalizations.of(context)!.streakDaysPlural(streakDays) : AppLocalizations.of(context)!.streakZero,
             style: TextStyle(
               color: isFire ? AppTheme.tomatoRed : AppTheme.textGrey,
               fontWeight: FontWeight.bold,

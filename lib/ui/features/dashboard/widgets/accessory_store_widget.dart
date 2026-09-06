@@ -9,15 +9,15 @@ class AccessoryStoreWidget extends StatelessWidget {
   const AccessoryStoreWidget({Key? key, required this.viewModel}) : super(key: key);
 
   static const List<Map<String, dynamic>> accessories = [
-    {'id': 'sleeping', 'name': '쿨쿨', 'emoji': '💤', 'cost': 1000, 'scale': 0.8, 'offsetX': -30.0, 'offsetY': -40.0},
-    {'id': 'sweat', 'name': '삐질 땀방울', 'emoji': '💧', 'cost': 2000, 'scale': 0.6, 'offsetX': 70.0, 'offsetY': -25.0},
-    {'id': 'bandaid', 'name': '반창고', 'emoji': '🩹', 'cost': 3000, 'scale': 0.7, 'offsetX': 70.0, 'offsetY': -5.0},
-    {'id': 'sparkles', 'name': '반짝반짝 볼', 'emoji': '✨', 'cost': 5000, 'scale': 0.8, 'offsetX': 70.0, 'offsetY': 10.0},
-    {'id': 'tongue', 'name': '메롱', 'emoji': '👅', 'cost': 6000, 'scale': 0.8, 'offsetX': 0.0, 'offsetY': 40.0},
-    {'id': 'glasses', 'name': '범생이 안경', 'emoji': '👓', 'cost': 7500, 'scale': 1.2, 'offsetX': 0.0, 'offsetY': -15.0},
-    {'id': 'goggles', 'name': '수영 고글', 'emoji': '🥽', 'cost': 8500, 'scale': 1.2, 'offsetX': 0.0, 'offsetY': -15.0},
-    {'id': 'sunglasses', 'name': '멋쟁이 선글라스', 'emoji': '🕶️', 'cost': 9900, 'scale': 1.2, 'offsetX': 0.0, 'offsetY': -15.0},
-    {'id': 'headband', 'name': '열공 머리띠', 'emoji': '🔥열공🔥', 'cost': 10000, 'scale': 1.0, 'offsetX': 0.0, 'offsetY': -45.0},
+    {'id': 'sleeping', 'name': '쿨쿨', 'imagePath': 'assets/images/accessories/sleeping.png', 'color': Colors.indigoAccent, 'cost': 1000, 'width': 60.0, 'height': 60.0, 'offsetX': 70.0, 'offsetY': -70.0},
+    {'id': 'sweat', 'name': '삐질 땀방울', 'imagePath': 'assets/images/accessories/sweat.png', 'color': Colors.lightBlueAccent, 'cost': 2000, 'width': 50.0, 'height': 50.0, 'offsetX': 70.0, 'offsetY': -70.0},
+    {'id': 'bandaid', 'name': '반창고', 'imagePath': 'assets/images/accessories/bandaid.png', 'color': Colors.orangeAccent, 'cost': 3000, 'width': 60.0, 'height': 60.0, 'offsetX': 60.0, 'offsetY': -60.0},
+    {'id': 'sparkles', 'name': '반짝반짝 볼', 'imagePath': 'assets/images/accessories/sparkles.png', 'color': Colors.amber, 'cost': 5000, 'width': 60.0, 'height': 60.0, 'offsetX': 70.0, 'offsetY': -70.0},
+    {'id': 'tongue', 'name': '메롱', 'imagePath': 'assets/images/accessories/tongue.png', 'color': Colors.pinkAccent, 'cost': 6000, 'width': 55.0, 'height': 55.0, 'offsetX': 0.0, 'offsetY': 38.0},
+    {'id': 'glasses', 'name': '범생이 안경', 'imagePath': 'assets/images/accessories/glasses.png', 'color': Colors.grey, 'cost': 7500, 'width': 300.0, 'height': 300.0, 'offsetX': 0.0, 'offsetY': -10.0},
+    {'id': 'goggles', 'name': '수영 고글', 'imagePath': 'assets/images/accessories/goggles.png', 'color': Colors.blue, 'cost': 8500, 'width': 300.0, 'height': 300.0, 'offsetX': 0.0, 'offsetY': -40.0},
+    {'id': 'sunglasses', 'name': '멋쟁이 선글라스', 'imagePath': 'assets/images/accessories/sunglasses.png', 'color': Colors.black87, 'cost': 9900, 'width': 300.0, 'height': 300.0, 'offsetX': 0.0, 'offsetY': -10.0},
+    {'id': 'headband', 'name': '왕관', 'imagePath': 'assets/images/accessories/headband.png', 'color': Colors.redAccent, 'cost': 10000, 'width': 120.0, 'height': 120.0, 'offsetX': 0.0, 'offsetY': -85.0},
   ];
 
   @override
@@ -37,13 +37,28 @@ class AccessoryStoreWidget extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              '✨ 나만의 토마토 꾸미기 상점',
-              style: TextStyle(color: AppTheme.textLight, fontSize: 16, fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                Icon(Icons.auto_awesome, color: AppTheme.textLight, size: 18),
+                SizedBox(width: 6),
+                Text(
+                  '나만의 토마토 꾸미기 상점',
+                  style: TextStyle(color: AppTheme.textLight, fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
-            const Text(
-              '획득한 자산 💰(원)을 지불하여 타이머 화면의 토마토를 꾸며보세요!',
+            const Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(text: '획득한 자산 '),
+                  WidgetSpan(
+                    alignment: PlaceholderAlignment.middle,
+                    child: Icon(Icons.monetization_on, size: 14, color: AppTheme.textGrey),
+                  ),
+                  TextSpan(text: '(원)을 지불하여 타이머 화면의 토마토를 꾸며보세요!'),
+                ],
+              ),
               style: TextStyle(color: AppTheme.textGrey, fontSize: 12),
             ),
             const SizedBox(height: 16),
@@ -81,7 +96,14 @@ class AccessoryStoreWidget extends StatelessWidget {
                             _showPurchaseConfirm(context, acc);
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('자산이 부족합니다! 💰')),
+                              SnackBar(
+                                content: Row(
+                                  children: [
+                                    Text('자산이 부족합니다! '),
+                                    Icon(Icons.monetization_on, color: Colors.white, size: 16),
+                                  ],
+                                ),
+                              ),
                             );
                           }
                         }
@@ -89,11 +111,11 @@ class AccessoryStoreWidget extends StatelessWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(acc['emoji'], style: const TextStyle(
-                            fontSize: 32, 
-                            color: Colors.white,
-                            fontFamilyFallback: ['Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji'],
-                          )),
+                          Image.asset(
+                            acc['imagePath'] as String,
+                            width: 36,
+                            height: 36,
+                          ),
                           const SizedBox(height: 8),
                           Text(
                             acc['name'],
@@ -115,7 +137,8 @@ class AccessoryStoreWidget extends StatelessWidget {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Text('💰 ', style: TextStyle(fontSize: 10)),
+                                const Icon(Icons.monetization_on, size: 12, color: AppTheme.textGrey),
+                                const SizedBox(width: 4),
                                 Text(
                                   '${acc['cost']}원',
                                   style: TextStyle(
@@ -144,7 +167,13 @@ class AccessoryStoreWidget extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceDark,
-        title: Text('${acc['emoji']} ${acc['name']} 구매', style: const TextStyle(color: AppTheme.textLight)),
+        title: Row(
+          children: [
+            Image.asset(acc['imagePath'] as String, width: 24, height: 24),
+            const SizedBox(width: 8),
+            Text('${acc['name']} 구매', style: const TextStyle(color: AppTheme.textLight)),
+          ],
+        ),
         content: Text('내 자산 ${acc['cost']}원을 사용하여 구매하시겠습니까?', style: const TextStyle(color: AppTheme.textGrey)),
         actions: [
           TextButton(

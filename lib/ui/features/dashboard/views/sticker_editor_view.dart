@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:cross_file/cross_file.dart';
@@ -107,6 +108,15 @@ class _StickerEditorViewState extends State<StickerEditorView> {
         throw Exception('캡처 이미지가 비어 있습니다.');
       }
 
+      if (kIsWeb) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('웹 환경에서는 이미지 공유 기능을 지원하지 않습니다.')),
+          );
+        }
+        return;
+      }
+
       final directory = await getTemporaryDirectory();
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final imageFile = await File(directory.path + '/focus_share_' + timestamp.toString() + '.png').create(recursive: true);
@@ -117,7 +127,11 @@ class _StickerEditorViewState extends State<StickerEditorView> {
     } catch (e) {
       debugPrint('Share failed: \$e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('공유 실패: ' + e.toString())),
+        SnackBar(
+          content: Text('공유 실패: ' + e.toString()),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+        ),
       );
     } finally {
       if (mounted) {
@@ -274,6 +288,7 @@ class _StickerEditorViewState extends State<StickerEditorView> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),

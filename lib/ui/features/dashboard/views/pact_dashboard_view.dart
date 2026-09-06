@@ -8,15 +8,17 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/app_theme.dart';
 import '../../../core/widgets/time_bank_card.dart';
 import '../widgets/tomato_farm_widget.dart';
-import '../widgets/inventory_store_widget.dart';
 import '../widgets/accessory_store_widget.dart';
 import 'sticker_editor_view.dart';
 import '../view_models/pact_dashboard_view_model.dart';
 import '../../focus_timer/views/active_timer_view.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../../../../core/utils/ad_helper.dart';
 
 class PactDashboardView extends StatefulWidget {
   const PactDashboardView({Key? key}) : super(key: key);
@@ -52,23 +54,70 @@ class _PactDashboardViewState extends State<PactDashboardView> with WidgetsBindi
       barrierDismissible: !isInitial,
       builder: (_) => AlertDialog(
         backgroundColor: AppTheme.surfaceDark,
-        title: const Text('농장 이용 가이드 🍅', style: TextStyle(color: AppTheme.textLight)),
+        title: Row(
+          children: [
+            Icon(Icons.eco, color: AppTheme.textLight, size: 24),
+            const SizedBox(width: 8),
+            Text(AppLocalizations.of(context)!.tutorialTitle, style: const TextStyle(color: AppTheme.textLight)),
+          ],
+        ),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            children: const [
-              Text('1️⃣ 집중해서 물방울 얻기 💧', style: TextStyle(color: AppTheme.tomatoRed, fontWeight: FontWeight.bold)),
-              Text('타이머를 설정하고 끝까지 완주하면 1분당 1개의 물방울을 얻습니다.', style: TextStyle(color: AppTheme.textGrey)),
-              SizedBox(height: 12),
-              Text('2️⃣ 물로 토마토 키우기 🌱', style: TextStyle(color: AppTheme.tomatoRed, fontWeight: FontWeight.bold)),
-              Text('모은 물방울을 주면 토마토가 쑥쑥 자라납니다.\n(🔥 연속 출석 일수가 높을수록 성장이 빨라집니다!)', style: TextStyle(color: AppTheme.textGrey)),
-              SizedBox(height: 12),
-              Text('3️⃣ 토마토 수확 후 자산 획득 💰', style: TextStyle(color: AppTheme.tomatoRed, fontWeight: FontWeight.bold)),
-              Text('토마토를 상점에 판매하면 1개당 1,000원의 자산(돈)을 획득합니다.', style: TextStyle(color: AppTheme.textGrey)),
-              SizedBox(height: 12),
-              Text('4️⃣ 자산으로 아이템 장착 🕶️', style: TextStyle(color: AppTheme.tomatoRed, fontWeight: FontWeight.bold)),
-              Text('모은 자산으로 귀여운 상점 아이템을 구매해 나만의 토마토를 꾸며보세요!', style: TextStyle(color: AppTheme.textGrey)),
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.looks_one, color: AppTheme.tomatoRed, size: 20),
+                  const SizedBox(width: 4),
+                  Text(AppLocalizations.of(context)!.tutorialStep1Title, style: const TextStyle(color: AppTheme.tomatoRed, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.opacity, color: AppTheme.tomatoRed, size: 20),
+                ],
+              ),
+              Text(AppLocalizations.of(context)!.tutorialStep1Desc, style: const TextStyle(color: AppTheme.textGrey)),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Icon(Icons.looks_two, color: AppTheme.tomatoRed, size: 20),
+                  const SizedBox(width: 4),
+                  Text(AppLocalizations.of(context)!.tutorialStep2Title, style: const TextStyle(color: AppTheme.tomatoRed, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.spa, color: AppTheme.tomatoRed, size: 20),
+                ],
+              ),
+              Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(text: AppLocalizations.of(context)!.tutorialStep2Desc1),
+                    const WidgetSpan(alignment: PlaceholderAlignment.middle, child: Icon(Icons.local_fire_department, color: AppTheme.textGrey, size: 14)),
+                    TextSpan(text: AppLocalizations.of(context)!.tutorialStep2Desc2),
+                  ]
+                ),
+                style: const TextStyle(color: AppTheme.textGrey),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Icon(Icons.looks_3, color: AppTheme.tomatoRed, size: 20),
+                  const SizedBox(width: 4),
+                  Text(AppLocalizations.of(context)!.tutorialStep3Title, style: const TextStyle(color: AppTheme.tomatoRed, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.monetization_on, color: AppTheme.tomatoRed, size: 20),
+                ],
+              ),
+              Text(AppLocalizations.of(context)!.tutorialStep3Desc, style: const TextStyle(color: AppTheme.textGrey)),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Icon(Icons.looks_4, color: AppTheme.tomatoRed, size: 20),
+                  const SizedBox(width: 4),
+                  Text(AppLocalizations.of(context)!.tutorialStep4Title, style: const TextStyle(color: AppTheme.tomatoRed, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.checkroom, color: AppTheme.tomatoRed, size: 20),
+                ],
+              ),
+              Text(AppLocalizations.of(context)!.tutorialStep4Desc, style: const TextStyle(color: AppTheme.textGrey)),
             ],
           ),
         ),
@@ -78,7 +127,7 @@ class _PactDashboardViewState extends State<PactDashboardView> with WidgetsBindi
               if (isInitial) vm.markTutorialAsSeen();
               Navigator.pop(context);
             },
-            child: Text(isInitial ? '시작하기' : '확인', style: const TextStyle(color: AppTheme.tomatoRed)),
+            child: Text(isInitial ? AppLocalizations.of(context)!.tutorialStart : AppLocalizations.of(context)!.confirm, style: const TextStyle(color: AppTheme.tomatoRed)),
           ),
         ],
       ),
@@ -87,7 +136,7 @@ class _PactDashboardViewState extends State<PactDashboardView> with WidgetsBindi
 
   void _loadBannerAd() {
     _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-3940256099942544/6300978111', // Test Banner Ad Unit ID
+      adUnitId: AdHelper.bannerAdUnitId,
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
@@ -131,14 +180,14 @@ class _PactDashboardViewState extends State<PactDashboardView> with WidgetsBindi
               children: <Widget>[
                 ListTile(
                   leading: const Icon(Icons.photo_library, color: AppTheme.tomatoRed),
-                  title: const Text('갤러리에서 선택', style: TextStyle(color: Colors.white, fontSize: 18)),
+                  title: Text(AppLocalizations.of(context)!.imageGallery, style: const TextStyle(color: Colors.white, fontSize: 18)),
                   onTap: () {
                     Navigator.of(context).pop(ImageSource.gallery);
                   },
                 ),
                 ListTile(
                   leading: const Icon(Icons.photo_camera, color: AppTheme.tomatoRed),
-                  title: const Text('카메라로 촬영', style: TextStyle(color: Colors.white, fontSize: 18)),
+                  title: Text(AppLocalizations.of(context)!.imageCamera, style: const TextStyle(color: Colors.white, fontSize: 18)),
                   onTap: () {
                     Navigator.of(context).pop(ImageSource.camera);
                   },
@@ -189,7 +238,7 @@ class _PactDashboardViewState extends State<PactDashboardView> with WidgetsBindi
       debugPrint('Screenshot or Share failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('공유하기에 실패했습니다. (카메라 권한 또는 환경 문제)')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.shareFailedMessage)),
         );
       }
     }
@@ -201,14 +250,14 @@ class _PactDashboardViewState extends State<PactDashboardView> with WidgetsBindi
         if (kIsWeb) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('웹 브라우저에서는 이미지 공유 기능이 지원되지 않습니다.')),
+              SnackBar(content: Text(AppLocalizations.of(context)!.webShareNotSupported)),
             );
           }
         } else {
           final directory = await getTemporaryDirectory();
-          final imagePath = await File('${directory.path}/focus_pact_share.png').create();
+          final imagePath = await File('${directory.path}/pomo_farm_share.png').create();
           await imagePath.writeAsBytes(imageBytes);
-          await Share.shareXFiles([XFile(imagePath.path, mimeType: 'image/png')], text: '나의 토마토 수확 성과를 확인해보세요! 🍅');
+          await Share.shareXFiles([XFile(imagePath.path, mimeType: 'image/png')], text: AppLocalizations.of(context)!.shareDefaultText);
         }
       }
     } catch (e) {
@@ -225,15 +274,21 @@ class _PactDashboardViewState extends State<PactDashboardView> with WidgetsBindi
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: AppTheme.surfaceDark,
-          title: const Text('👑 프리미엄 (광고 제거)', style: TextStyle(color: AppTheme.tomatoRed)),
-          content: const Text(
-            '프리미엄 광고 제거 기능은 현재 열심히 준비 중입니다!\n\n다음 업데이트(V1.1)에서 정식으로 찾아뵙겠습니다. 조금만 기다려주세요 😊',
-            style: TextStyle(color: AppTheme.textLight, height: 1.5),
+          title: Row(
+            children: [
+              const Icon(Icons.star, color: AppTheme.tomatoRed, size: 24),
+              const SizedBox(width: 8),
+              Text(AppLocalizations.of(context)!.premiumTitle, style: const TextStyle(color: AppTheme.tomatoRed)),
+            ],
+          ),
+          content: Text(
+            AppLocalizations.of(context)!.premiumComingSoonText,
+            style: const TextStyle(color: AppTheme.textLight, height: 1.5),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('확인', style: TextStyle(color: AppTheme.tomatoRed, fontWeight: FontWeight.bold)),
+              child: Text(AppLocalizations.of(context)!.confirm, style: const TextStyle(color: AppTheme.tomatoRed, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -246,25 +301,39 @@ class _PactDashboardViewState extends State<PactDashboardView> with WidgetsBindi
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceDark,
-        title: const Text('👑 프리미엄 구매 (테스트)', style: TextStyle(color: AppTheme.textLight)),
+        title: Row(
+          children: [
+            const Icon(Icons.star, color: AppTheme.textLight, size: 24),
+            const SizedBox(width: 8),
+            Text(AppLocalizations.of(context)!.premiumTestTitle, style: const TextStyle(color: AppTheme.textLight)),
+          ],
+        ),
         content: Text(
-          isPrem ? '프리미엄을 해제하시겠습니까?' : '광고 없는 쾌적한 몰입을 원하시나요?\n(관리자 전용 테스트)',
+          isPrem ? AppLocalizations.of(context)!.premiumTestDeactivateDesc : AppLocalizations.of(context)!.premiumTestActivateDesc,
           style: const TextStyle(color: AppTheme.textGrey),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('취소', style: TextStyle(color: AppTheme.textGrey)),
+            child: Text(AppLocalizations.of(context)!.cancel, style: const TextStyle(color: AppTheme.textGrey)),
           ),
           TextButton(
             onPressed: () {
               viewModel.togglePremium();
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(viewModel.isPremium ? '👑 프리미엄 모드가 활성화되었습니다! (광고 제거)' : '프리미엄 모드가 해제되어 다시 광고가 표시됩니다.')),
+                SnackBar(
+                  content: Row(
+                    children: [
+                      if (viewModel.isPremium) const Icon(Icons.star, color: Colors.amber, size: 18),
+                      if (viewModel.isPremium) const SizedBox(width: 4),
+                      Text(viewModel.isPremium ? AppLocalizations.of(context)!.premiumActivatedMessage : AppLocalizations.of(context)!.premiumDeactivatedMessage),
+                    ],
+                  ),
+                ),
               );
             },
-            child: Text(isPrem ? '해제하기' : '구매하기', style: const TextStyle(color: AppTheme.tomatoRed, fontWeight: FontWeight.bold)),
+            child: Text(isPrem ? AppLocalizations.of(context)!.deactivatePremium : AppLocalizations.of(context)!.buyPremium, style: const TextStyle(color: AppTheme.tomatoRed, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -291,21 +360,40 @@ class _PactDashboardViewState extends State<PactDashboardView> with WidgetsBindi
                       isSecretUnlocked = true;
                     });
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('개발자 모드가 활성화되었습니다.')),
+                      SnackBar(content: Text(AppLocalizations.of(context)!.devModeActivated)),
                     );
                   }
                 }
               },
-              child: const Text('⚙️ 설정 및 안내', style: TextStyle(color: AppTheme.textLight)),
+              child: Row(
+                children: [
+                  const Icon(Icons.settings, color: AppTheme.textLight, size: 24),
+                  const SizedBox(width: 8),
+                  Text(AppLocalizations.of(context)!.settingsTitle, style: const TextStyle(color: AppTheme.textLight)),
+                ],
+              ),
             ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Pomo Farm은 기기 내부에 데이터를 안전하게 저장합니다.\n\n'
-                  '⚠️ 앱을 삭제하시면 소중하게 키운 토마토 농장과 보상 데이터가 모두 초기화되니 주의해주세요!',
-                  style: TextStyle(color: AppTheme.textGrey, height: 1.5),
+                Text(
+                  AppLocalizations.of(context)!.settingsWarningDesc,
+                  style: const TextStyle(color: AppTheme.textGrey, height: 1.5),
+                ),
+                const SizedBox(height: 12),
+                const Divider(color: Colors.white24),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.privacy_tip, color: AppTheme.textGrey, size: 20),
+                  title: const Text('개인정보 처리방침', style: TextStyle(color: AppTheme.textLight, fontSize: 14)),
+                  trailing: const Icon(Icons.open_in_new, color: AppTheme.textGrey, size: 16),
+                  onTap: () async {
+                    const url = 'https://raw.githubusercontent.com/kaiser1227/Pomo-Farm/main/PRIVACY_POLICY.md';
+                    if (await canLaunchUrl(Uri.parse(url))) {
+                      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                    }
+                  },
                 ),
                 if (isSecretUnlocked) ...[
                   const SizedBox(height: 16),
@@ -313,8 +401,8 @@ class _PactDashboardViewState extends State<PactDashboardView> with WidgetsBindi
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     activeColor: AppTheme.tomatoRed,
-                    title: const Text('관리자 모드 (테스트용)', style: TextStyle(color: AppTheme.textLight)),
-                    subtitle: const Text('ON: 데이터 만땅, OFF: 초기화', style: TextStyle(color: AppTheme.textGrey, fontSize: 12)),
+                    title: Text(AppLocalizations.of(context)!.adminModeTitle, style: const TextStyle(color: AppTheme.textLight)),
+                    subtitle: Text(AppLocalizations.of(context)!.adminModeDesc, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12)),
                     value: vm.isAdminMode,
                     onChanged: (val) {
                       setState(() {
@@ -331,11 +419,11 @@ class _PactDashboardViewState extends State<PactDashboardView> with WidgetsBindi
                   Navigator.pop(ctx);
                   _showResetConfirmDialog(vm);
                 },
-                child: const Text('데이터 초기화', style: TextStyle(color: AppTheme.error)),
+                child: Text(AppLocalizations.of(context)!.resetDataBtn, style: const TextStyle(color: AppTheme.error)),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('확인', style: TextStyle(color: AppTheme.tomatoRed, fontWeight: FontWeight.bold)),
+                child: Text(AppLocalizations.of(context)!.confirm, style: const TextStyle(color: AppTheme.tomatoRed, fontWeight: FontWeight.bold)),
               ),
             ],
           );
@@ -349,22 +437,28 @@ class _PactDashboardViewState extends State<PactDashboardView> with WidgetsBindi
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.surfaceDark,
-        title: const Text('🚨 데이터 초기화', style: TextStyle(color: AppTheme.error)),
-        content: const Text('모든 농장 데이터와 보상이 사라집니다.\n정말 초기화 하시겠습니까?', style: TextStyle(color: AppTheme.textGrey)),
+        title: Row(
+          children: [
+            const Icon(Icons.warning, color: AppTheme.error, size: 24),
+            const SizedBox(width: 8),
+            Text(AppLocalizations.of(context)!.resetDataTitle, style: const TextStyle(color: AppTheme.error)),
+          ],
+        ),
+        content: Text(AppLocalizations.of(context)!.resetDataWarning, style: const TextStyle(color: AppTheme.textGrey)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('취소', style: TextStyle(color: AppTheme.textGrey)),
+            child: Text(AppLocalizations.of(context)!.cancel, style: const TextStyle(color: AppTheme.textGrey)),
           ),
           TextButton(
             onPressed: () {
               vm.resetData();
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('데이터가 초기화되었습니다.')),
+                SnackBar(content: Text(AppLocalizations.of(context)!.dataResetSuccess)),
               );
             },
-            child: const Text('초기화', style: TextStyle(color: AppTheme.error, fontWeight: FontWeight.bold)),
+            child: Text(AppLocalizations.of(context)!.resetAction, style: const TextStyle(color: AppTheme.error, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -385,10 +479,10 @@ class _PactDashboardViewState extends State<PactDashboardView> with WidgetsBindi
             ),
             title: Row(
               mainAxisSize: MainAxisSize.min,
-              children: const [
-                Text('🍅', style: TextStyle(fontSize: 24)),
-                SizedBox(width: 8),
-                Text(
+              children: [
+                Image.asset('assets/images/tomato_stage_6.png', height: 28),
+                const SizedBox(width: 8),
+                const Text(
                   'Pomo Farm',
                   style: TextStyle(
                     letterSpacing: 2.0,
@@ -408,7 +502,7 @@ class _PactDashboardViewState extends State<PactDashboardView> with WidgetsBindi
                     constraints: const BoxConstraints(),
                     icon: Icon(Icons.star, color: viewModel.isPremium ? AppTheme.tomatoRed : Colors.grey, size: 22),
                     onPressed: () => _showPremiumDialog(context, viewModel),
-                    tooltip: '프리미엄 설정',
+                    tooltip: AppLocalizations.of(context)!.premiumSettingsTooltip,
                   ),
                   const SizedBox(width: 4),
                   IconButton(
@@ -416,7 +510,7 @@ class _PactDashboardViewState extends State<PactDashboardView> with WidgetsBindi
                     constraints: const BoxConstraints(),
                     icon: const Icon(Icons.share, color: Colors.white, size: 22),
                     onPressed: () => _takeScreenshotAndShare(viewModel),
-                    tooltip: '자랑하기',
+                    tooltip: AppLocalizations.of(context)!.shareTooltip,
                   ),
                   const SizedBox(width: 4),
                   IconButton(
@@ -424,81 +518,92 @@ class _PactDashboardViewState extends State<PactDashboardView> with WidgetsBindi
                     constraints: const BoxConstraints(),
                     icon: const Icon(Icons.settings, color: Colors.white, size: 22),
                     onPressed: _showSettingsDialog,
-                    tooltip: '설정',
+                    tooltip: AppLocalizations.of(context)!.settingsTooltip,
                   ),
                   const SizedBox(width: 8),
                 ],
               ),
             ],
           ),
-          body: Column(
-            children: [
-              Expanded(
-                child: Screenshot(
-                  controller: _screenshotController,
-                  child: Container(
-                    color: AppTheme.backgroundDark, // For screenshot background
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        return SingleChildScrollView(
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                            child: IntrinsicHeight(
-                              child: Padding(
-                                padding: const EdgeInsets.all(20.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                                  children: [
+          body: Screenshot(
+            controller: _screenshotController,
+            child: Container(
+              color: AppTheme.backgroundDark, // For screenshot background
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                      child: IntrinsicHeight(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
 
-                                    const SizedBox(height: 16),
-                                    TimeBankCard(viewModel: viewModel),
-                                    const SizedBox(height: 16),
-                                    TomatoFarmWidget(viewModel: viewModel),
-                                    const Spacer(),
-                                    InventoryStoreWidget(viewModel: viewModel),
-                                    const SizedBox(height: 16),
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        primary: AppTheme.tomatoRed,
-                                        onPrimary: Colors.white,
-                                        padding: const EdgeInsets.symmetric(vertical: 20),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                        ),
-                                      ),
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(builder: (_) => const ActiveTimerView(targetMinutes: 25)),
-                                        );
-                                      },
-                                      child: const Text(
-                                        '🍅 뽀모도로 타이머 시작하기',
-                                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                      ),
+                              const SizedBox(height: 16),
+                              TimeBankCard(viewModel: viewModel),
+                              const SizedBox(height: 16),
+                              TomatoFarmWidget(viewModel: viewModel),
+                              const Spacer(),
+                              const SizedBox(height: 16),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  primary: AppTheme.tomatoRed,
+                                  onPrimary: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 20),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const ActiveTimerView(targetMinutes: 25)),
+                                  );
+                                },
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Image.asset('assets/images/tomato_stage_6.png', width: 24, height: 24),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      AppLocalizations.of(context)!.startPomodoroTimer,
+                                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                                     ),
-                                    const SizedBox(height: 16),
-                                    AccessoryStoreWidget(viewModel: viewModel),
-                                    const SizedBox(height: 16),
                                   ],
                                 ),
                               ),
-                            ),
+                              const SizedBox(height: 16),
+                              AccessoryStoreWidget(viewModel: viewModel),
+                              const SizedBox(height: 16),
+                            ],
                           ),
-                        );
-                      },
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          bottomNavigationBar: (!kIsWeb && !viewModel.isPremium && _isBannerAdLoaded && _bannerAd != null)
+              ? Container(
+                  color: AppTheme.backgroundDark,
+                  child: SafeArea(
+                    child: Container(
+                      alignment: Alignment.center,
+                      width: double.infinity,
+                      height: _bannerAd!.size.height.toDouble(),
+                      child: SizedBox(
+                        width: _bannerAd!.size.width.toDouble(),
+                        height: _bannerAd!.size.height.toDouble(),
+                        child: AdWidget(ad: _bannerAd!),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              if (!kIsWeb && !viewModel.isPremium && _isBannerAdLoaded && _bannerAd != null)
-                SizedBox(
-                  width: _bannerAd!.size.width.toDouble(),
-                  height: _bannerAd!.size.height.toDouble(),
-                  child: AdWidget(ad: _bannerAd!),
-                ),
-            ],
-          ),
+                )
+              : null,
         );
       },
     );

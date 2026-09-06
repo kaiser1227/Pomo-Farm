@@ -5,10 +5,10 @@ import '../../domain/models/tomato_farm_model.dart';
 import '../../domain/models/daily_snapshot_model.dart';
 import '../local/local_storage_service.dart';
 
-class FocusPactRepository {
+class PomoFarmRepository {
   final LocalStorageService _localStorage;
 
-  FocusPactRepository(this._localStorage);
+  PomoFarmRepository(this._localStorage);
 
   // --- Streak Methods ---
   StreakModel getStreak() {

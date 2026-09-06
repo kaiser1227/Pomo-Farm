@@ -1,6 +1,6 @@
 {
-    "name": "focus_pact",
-    "short_name": "focus_pact",
+    "name": "pomo_farm",
+    "short_name": "pomo_farm",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

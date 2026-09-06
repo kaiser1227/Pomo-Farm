@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../../core/app_theme.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class TripleWarningDialog extends StatefulWidget {
   final int targetMinutes;
@@ -13,7 +14,7 @@ class TripleWarningDialog extends StatefulWidget {
 class _TripleWarningDialogState extends State<TripleWarningDialog> {
   final TextEditingController _controller = TextEditingController();
   
-  static const List<String> _sentences = [
+  static const List<String> _sentencesKo = [
     "나는 지금 유혹에 굴복하여 나의 소중한 시간을 버립니다",
     "나와의 약속을 깨고 순간의 즐거움을 선택하겠습니다",
     "오늘도 핑계를 대며 내일의 나에게 책임을 떠넘깁니다",
@@ -46,15 +47,58 @@ class _TripleWarningDialogState extends State<TripleWarningDialog> {
     "지금 이 선택이 어떤 결과를 가져올지 알면서도 눈을 감습니다",
   ];
 
-  late final String _targetText;
+  static const List<String> _sentencesEn = [
+    "I am giving in to temptation and throwing away my precious time.",
+    "I will break the promise to myself and choose momentary pleasure.",
+    "I am making excuses today and passing the responsibility to my tomorrow's self.",
+    "I will give up the opportunity to grow and settle for comfort.",
+    "Immediate dopamine is more important than my future.",
+    "I admit that I cannot even show this small amount of patience.",
+    "I become a slave to my smartphone and give up my independent time.",
+    "I prove once again that resolving is easy but practicing is hard.",
+    "I will stop my steps toward the goal and stay in place.",
+    "The fake world on the screen is better than the promises with precious people.",
+    "I fail to resist a brief temptation and destroy the hard work I have built.",
+    "I accept my shallow willpower that cannot even keep the rules I set.",
+    "I will avoid the pain of focus and chase the pleasure of distraction.",
+    "I will waste the precious asset that would grow me in an instant.",
+    "I cannot break the chain of bad habits and re-enter the loop.",
+    "My pledge to change was just an empty echo.",
+    "I will willingly sacrifice future rewards for present laziness.",
+    "I will be a person who easily gives up in front of a very small obstacle.",
+    "I will give up being the true master of my life and be dragged around by my smartphone.",
+    "I reach out to the immediate temptation knowing clearly that I will regret it.",
+    "I prove myself that I have no ability to control myself.",
+    "The weakness of this moment gathers to create a huge failure in my life.",
+    "I will consume time-killing content instead of meaningful effort.",
+    "Insignificant pleasure suits me better than great achievement.",
+    "I will get used to giving up and not even attempt to challenge anymore.",
+    "I will ruthlessly betray the expectations of my partner who believes and supports me.",
+    "This is my complete defeat where no excuse will work.",
+    "I cover up today's failure with the excuse that I can just start over.",
+    "I am grinding my one and only life into the smartphone screen.",
+    "I close my eyes even knowing what consequence this choice will bring.",
+  ];
+
+  late String _targetText;
   bool _canGiveUp = false;
+  bool _initialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      final isKorean = Localizations.localeOf(context).languageCode == 'ko';
+      final sentences = isKorean ? _sentencesKo : _sentencesEn;
+      final random = Random();
+      _targetText = sentences[random.nextInt(sentences.length)];
+      _initialized = true;
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    final random = Random();
-    _targetText = _sentences[random.nextInt(_sentences.length)];
-    
     _controller.addListener(() {
       if (_controller.text == _targetText) {
         setState(() => _canGiveUp = true);
@@ -77,21 +121,45 @@ class _TripleWarningDialogState extends State<TripleWarningDialog> {
     return AlertDialog(
       backgroundColor: AppTheme.surfaceDark,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Text('🚨 정말 포기하시겠습니까?', style: TextStyle(color: AppTheme.error)),
+      title: Row(
+        children: [
+          Icon(Icons.warning_amber_rounded, color: AppTheme.error),
+          const SizedBox(width: 8),
+          Text(AppLocalizations.of(context)!.warningDialogTitle, style: const TextStyle(color: AppTheme.error, fontSize: 18)),
+        ],
+      ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('지금 포기하면 다음과 같은 페널티가 발생합니다:', style: TextStyle(color: AppTheme.textLight)),
+            Text(AppLocalizations.of(context)!.warningDialogPenaltyMsg, style: const TextStyle(color: AppTheme.textLight)),
             const SizedBox(height: 8),
-            const Text('🍅 애써 키운 연속 수확 기록이 초기화됩니다.', style: TextStyle(color: AppTheme.tomatoRed)),
+            Row(
+              children: [
+                const Icon(Icons.eco, color: AppTheme.tomatoRed, size: 16),
+                const SizedBox(width: 4),
+                Text(AppLocalizations.of(context)!.warningDialogStreakReset, style: const TextStyle(color: AppTheme.tomatoRed)),
+              ],
+            ),
             const SizedBox(height: 24),
-            Text('💰 집중 실패 벌금으로 $penalty분의 자산이 차감됩니다.', style: const TextStyle(color: AppTheme.lightTomato)),
+            Row(
+              children: [
+                const Icon(Icons.monetization_on, color: AppTheme.lightTomato, size: 16),
+                const SizedBox(width: 4),
+                Text(AppLocalizations.of(context)!.warningDialogAssetDeduction(penalty), style: const TextStyle(color: AppTheme.lightTomato)),
+              ],
+            ),
             const SizedBox(height: 8),
-            const Text('🤝 파트너에게 실패 알림이 전송됩니다.', style: TextStyle(color: AppTheme.textGrey)),
+            Row(
+              children: [
+                const Icon(Icons.group, color: AppTheme.textGrey, size: 16),
+                const SizedBox(width: 4),
+                Text(AppLocalizations.of(context)!.warningDialogPartnerNotification, style: const TextStyle(color: AppTheme.textGrey)),
+              ],
+            ),
             const SizedBox(height: 24),
-            const Text('그래도 포기하시려면, 아래 문장을 정확히 입력하세요.', style: TextStyle(color: AppTheme.textLight, fontWeight: FontWeight.bold)),
+            Text(AppLocalizations.of(context)!.warningDialogTypeToGiveUp, style: const TextStyle(color: AppTheme.textLight, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(12),
@@ -110,11 +178,11 @@ class _TripleWarningDialogState extends State<TripleWarningDialog> {
             TextField(
               controller: _controller,
               style: const TextStyle(color: AppTheme.textLight),
-              decoration: const InputDecoration(
-                hintText: '위 문장을 그대로 입력하세요',
-                hintStyle: TextStyle(color: AppTheme.textGrey),
-                border: OutlineInputBorder(),
-                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: AppTheme.error)),
+              decoration: InputDecoration(
+                hintText: AppLocalizations.of(context)!.warningDialogInputHint,
+                hintStyle: const TextStyle(color: AppTheme.textGrey),
+                border: const OutlineInputBorder(),
+                focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: AppTheme.error)),
               ),
             ),
           ],
@@ -123,7 +191,7 @@ class _TripleWarningDialogState extends State<TripleWarningDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false), // Continue focus
-          child: const Text('계속 집중하기', style: TextStyle(color: AppTheme.textLight, fontWeight: FontWeight.bold)),
+          child: Text(AppLocalizations.of(context)!.warningDialogContinueFocus, style: const TextStyle(color: AppTheme.textLight, fontWeight: FontWeight.bold)),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
@@ -131,7 +199,7 @@ class _TripleWarningDialogState extends State<TripleWarningDialog> {
             onPrimary: Colors.white,
           ),
           onPressed: _canGiveUp ? () => Navigator.pop(context, true) : null,
-          child: const Text('포기하고 자산 잃기'),
+          child: Text(AppLocalizations.of(context)!.warningDialogGiveUpAsset),
         ),
       ],
     );

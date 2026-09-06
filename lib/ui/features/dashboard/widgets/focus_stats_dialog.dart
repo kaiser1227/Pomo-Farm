@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/app_theme.dart';
 import '../view_models/pact_dashboard_view_model.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class FocusStatsDialog extends StatelessWidget {
   final PactDashboardViewModel viewModel;
@@ -16,7 +17,8 @@ class FocusStatsDialog extends StatelessWidget {
     // X-axis labels
     final now = DateTime.now();
     final List<String> labels = [];
-    final weekdays = ['월', '화', '수', '목', '금', '토', '일'];
+    final loc = AppLocalizations.of(context)!;
+    final weekdays = [loc.weekdayMon, loc.weekdayTue, loc.weekdayWed, loc.weekdayThu, loc.weekdayFri, loc.weekdaySat, loc.weekdaySun];
     for (int i = 6; i >= 0; i--) {
       final date = now.subtract(Duration(days: i));
       labels.add(weekdays[date.weekday - 1]);
@@ -31,9 +33,9 @@ class FocusStatsDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              '📊 주간 집중 시간',
-              style: TextStyle(
+            Text(
+              loc.statsTitle,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -90,7 +92,7 @@ class FocusStatsDialog extends StatelessWidget {
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              child: const Text('닫기', style: TextStyle(color: Colors.white)),
+              child: Text(loc.close, style: const TextStyle(color: Colors.white)),
             ),
           ],
         ),

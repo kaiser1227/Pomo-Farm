@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../app_theme.dart';
 import '../../features/dashboard/view_models/pact_dashboard_view_model.dart';
 import '../../features/dashboard/widgets/history_popup_dialog.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class TimeBankCard extends StatelessWidget {
   final PactDashboardViewModel viewModel;
@@ -18,6 +19,7 @@ class TimeBankCard extends StatelessWidget {
     final totalMoney = viewModel.timeBank.money;
     final streak = viewModel.streak.currentStreakDays;
     final todayFocus = viewModel.todayFocusMinutes;
+    final loc = AppLocalizations.of(context)!;
     
     return GestureDetector(
       onTap: () {
@@ -50,27 +52,41 @@ class TimeBankCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildInfoItem('💰 내 자산', '${formatter.format(totalMoney)}원', AppTheme.lightGreen),
-                _buildInfoItem('⏱️ 오늘 집중', '$todayFocus분', Colors.white),
-                _buildInfoItem('🔥 연속 일수', '$streak일', AppTheme.tomatoRed),
+                _buildInfoItem(Icons.monetization_on, loc.myAsset, '${formatter.format(totalMoney)}${loc.moneyUnit}', AppTheme.lightGreen),
+                _buildInfoItem(Icons.timer, loc.todayFocus, '$todayFocus${loc.minuteUnit}', Colors.white),
+                _buildInfoItem(Icons.local_fire_department, loc.streakDaysTitle, '$streak${loc.dayUnit}', AppTheme.tomatoRed),
               ],
             ),
             const SizedBox(height: 16),
-            const Text(
-              '👆 탭하여 상세 히스토리 보기',
-              style: TextStyle(color: Colors.white30, fontSize: 11),
-            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.touch_app, color: Colors.white30, size: 12),
+                const SizedBox(width: 4),
+                Text(
+                  loc.tapForHistory,
+                  style: const TextStyle(color: Colors.white30, fontSize: 11),
+                ),
+              ],
+            )
           ],
         ),
       ),
     );
   }
 
-  Widget _buildInfoItem(String label, String value, Color accentColor) {
+  Widget _buildInfoItem(IconData icon, String label, String value, Color accentColor) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(label, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12, fontWeight: FontWeight.w500)),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: AppTheme.textGrey),
+            const SizedBox(width: 4),
+            Text(label, style: const TextStyle(color: AppTheme.textGrey, fontSize: 12, fontWeight: FontWeight.w500)),
+          ],
+        ),
         const SizedBox(height: 8),
         Text(value, style: TextStyle(color: accentColor, fontSize: 18, fontWeight: FontWeight.bold)),
       ],

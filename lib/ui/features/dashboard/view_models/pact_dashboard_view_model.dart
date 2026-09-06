@@ -3,10 +3,10 @@ import '../../../../domain/models/streak_model.dart';
 import '../../../../domain/models/time_bank_model.dart';
 import '../../../../domain/models/tomato_farm_model.dart';
 import '../../../../domain/models/focus_history_model.dart';
-import '../../../../data/repositories/focus_pact_repository.dart';
+import '../../../../data/repositories/pomo_farm_repository.dart';
 
 class PactDashboardViewModel extends ChangeNotifier {
-  final FocusPactRepository _repository;
+  final PomoFarmRepository _repository;
 
   StreakModel _streak = StreakModel();
   TimeBankModel _timeBank = TimeBankModel();
@@ -86,13 +86,12 @@ class PactDashboardViewModel extends ChangeNotifier {
     await _repository.incrementStreak();
     if (isKioskActive) {
       await _repository.addSavedTime(minutes);
+      // 신규 경제: 집중 시간 1분당 1 물방울 지급
+      await _repository.updateTomatoFarm(_tomatoFarm.copyWith(
+        waterCount: _tomatoFarm.waterCount + minutes,
+      ));
     }
     await _repository.addFocusTime(minutes);
-    
-    // 신규 경제: 집중 시간 1분당 1 물방울 지급
-    await _repository.updateTomatoFarm(_tomatoFarm.copyWith(
-      waterCount: _tomatoFarm.waterCount + minutes,
-    ));
     
     _loadData();
   }

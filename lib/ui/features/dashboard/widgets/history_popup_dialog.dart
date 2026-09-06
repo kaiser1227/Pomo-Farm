@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/app_theme.dart';
 import '../view_models/pact_dashboard_view_model.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class HistoryPopupDialog extends StatelessWidget {
   final PactDashboardViewModel viewModel;
@@ -10,6 +11,7 @@ class HistoryPopupDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
     return Dialog(
       backgroundColor: AppTheme.surfaceDark,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -24,9 +26,9 @@ class HistoryPopupDialog extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    '📅 상태 히스토리',
-                    style: TextStyle(
+                  Text(
+                    loc.historyTitle,
+                    style: const TextStyle(
                       color: AppTheme.textLight,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -39,14 +41,14 @@ class HistoryPopupDialog extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              const TabBar(
+              TabBar(
                 labelColor: AppTheme.tomatoRed,
                 unselectedLabelColor: AppTheme.textGrey,
                 indicatorColor: AppTheme.tomatoRed,
                 tabs: [
-                  Tab(text: '일별'),
-                  Tab(text: '요일별'),
-                  Tab(text: '월별'),
+                  Tab(text: loc.tabDaily),
+                  Tab(text: loc.tabWeekday),
+                  Tab(text: loc.tabMonthly),
                 ],
               ),
               const SizedBox(height: 16),
@@ -72,7 +74,7 @@ class HistoryPopupDialog extends StatelessWidget {
     final sortedKeys = snapshots.keys.toList()..sort((a, b) => b.compareTo(a));
     
     if (sortedKeys.isEmpty) {
-      return const Center(child: Text('기록이 없습니다.', style: TextStyle(color: AppTheme.textGrey)));
+      return Center(child: Text(AppLocalizations.of(context)!.noRecords, style: const TextStyle(color: AppTheme.textGrey)));
     }
     
     return ListView.separated(
@@ -83,7 +85,7 @@ class HistoryPopupDialog extends StatelessWidget {
         final dateKey = sortedKeys[index];
         final snapshot = snapshots[dateKey]!;
         DateTime date = DateTime.tryParse(dateKey) ?? DateTime.now();
-        String formattedDate = DateFormat('yyyy년 MM월 dd일').format(date);
+        String formattedDate = AppLocalizations.of(context)!.timeFormatDaily(date.year.toString(), date.month.toString().padLeft(2, '0'), date.day.toString().padLeft(2, '0'));
 
         return Container(
           padding: const EdgeInsets.all(12),
@@ -100,9 +102,9 @@ class HistoryPopupDialog extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildStat('⏳', '${snapshot.focusMinutes}분'),
-                  _buildStat('🔥', '${snapshot.streakDays}일'),
-                  _buildStat('🍅', '${snapshot.harvestCount}개'),
+                  _buildStat('⏳', '${snapshot.focusMinutes}${AppLocalizations.of(context)!.minuteUnit}'),
+                  _buildStat('🔥', '${snapshot.streakDays}${AppLocalizations.of(context)!.dayUnit}'),
+                  _buildStat('🍅', '${snapshot.harvestCount}${AppLocalizations.of(context)!.countUnit}'),
                 ],
               ),
             ],
@@ -120,7 +122,8 @@ class HistoryPopupDialog extends StatelessWidget {
       weekdayStats[date.weekday] = (weekdayStats[date.weekday] ?? 0) + entry.value;
     }
     
-    final weekdays = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일'];
+    final loc = AppLocalizations.of(context)!;
+    final weekdays = [loc.weekdayMon, loc.weekdayTue, loc.weekdayWed, loc.weekdayThu, loc.weekdayFri, loc.weekdaySat, loc.weekdaySun];
     
     return ListView.separated(
       shrinkWrap: true,
@@ -129,7 +132,7 @@ class HistoryPopupDialog extends StatelessWidget {
       itemBuilder: (context, index) {
         int weekday = index + 1;
         int minutes = weekdayStats[weekday] ?? 0;
-        return _buildAggregateRow(weekdays[index], minutes);
+        return _buildAggregateRow(weekdays[index], minutes, context);
       },
     );
   }
@@ -147,7 +150,7 @@ class HistoryPopupDialog extends StatelessWidget {
     final sortedMonths = monthlyStats.keys.toList()..sort((a, b) => b.compareTo(a));
     
     if (sortedMonths.isEmpty) {
-      return const Center(child: Text('기록이 없습니다.', style: TextStyle(color: AppTheme.textGrey)));
+      return Center(child: Text(AppLocalizations.of(context)!.noRecords, style: const TextStyle(color: AppTheme.textGrey)));
     }
     
     return ListView.separated(
@@ -158,13 +161,13 @@ class HistoryPopupDialog extends StatelessWidget {
         String monthKey = sortedMonths[index]; // 'yyyy-MM'
         int minutes = monthlyStats[monthKey] ?? 0;
         final parts = monthKey.split('-');
-        String label = '${parts[0]}년 ${parts[1]}월';
-        return _buildAggregateRow(label, minutes);
+        String label = AppLocalizations.of(context)!.timeFormatMonthly(parts[0], parts[1]);
+        return _buildAggregateRow(label, minutes, context);
       },
     );
   }
 
-  Widget _buildAggregateRow(String label, int minutes) {
+  Widget _buildAggregateRow(String label, int minutes, BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
@@ -180,7 +183,7 @@ class HistoryPopupDialog extends StatelessWidget {
             children: [
               const Text('⏳', style: TextStyle(fontSize: 16)),
               const SizedBox(width: 8),
-              Text('$minutes 분', style: const TextStyle(color: AppTheme.lightGreen, fontSize: 16, fontWeight: FontWeight.bold)),
+              Text('$minutes ${AppLocalizations.of(context)!.minuteUnit}', style: const TextStyle(color: AppTheme.lightGreen, fontSize: 16, fontWeight: FontWeight.bold)),
             ],
           ),
         ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/app_theme.dart';
 import 'focus_stats_dialog.dart';
 import '../view_models/pact_dashboard_view_model.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class FocusProgressRing extends StatelessWidget {
   final PactDashboardViewModel viewModel;
@@ -76,7 +77,7 @@ class FocusProgressRing extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              '터치하여 주간 통계 보기',
+              AppLocalizations.of(context)!.tapForWeeklyStats,
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.white.withOpacity(0.4),
